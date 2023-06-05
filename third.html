@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="./jquery.min.js"></script>
+    <script src="./signalr.min.js"></script>
+    <script>
+        $(document).ready(() => {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("http://localhost:5004/myhub")
+                .withAutomaticReconnect([1000, 1000, 2000])///While using connection created, but canceled 
+                .build();
+            connection.start();
+            // async function start() {
+            //     try {
+            //         await connection.start()
+            //         console.log("succesfull connection");
+            //     } catch (error) {
+            //         setTimeout(() => {
+            //             start()
+            //         }, 2000);
+            //     }
+            // }
+
+            // start();
+
+            connection.on("userConnected", userId => console.log("UserId:"+ userId))
+            const btn = $("#btn");
+            connection.on("recieveMessage", message => {
+                const signalrMessageHtml = $("#signalrMessage");
+                $(signalrMessageHtml).html("");
+                $(signalrMessageHtml).html(message);
+            })
+            
+            $(btn).click(function(){
+                // const name = $("#name").val();
+                // const message = $("#message").val();
+                const object= {
+                    name: $("#name").val(),
+                    message: $("#message").val()
+                }
+                connection.invoke("SendMessageAsync", object).catch(
+                    error => console.log(`Something wrong while sending message ${error}`)
+                );
+                
+            })
+
+        }) 
+    </script>
+</head>
+
+<body>
+    <input type="text" id="name" placeholder="name">
+    <input type="text" id="message" placeholder="message">
+    <button id="btn">Trigger</button>
+
+    <p id="signalrMessage"></p>
+</body>
+
+</html>
